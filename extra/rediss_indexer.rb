@@ -79,6 +79,7 @@ $databasepath = nil
 $repositories = nil
 $onlyfiles = nil
 $onlyrepos = nil
+$onlyredis = nil
 $env = 'production'
 $resetlog = nil
 $retryfailed = nil
@@ -131,6 +132,7 @@ optparse = OptionParser.new do |opts|
   opts.on('-v', '--verbose',            'verbose') {$verbose += 1}
   opts.on('-f', '--files',              'Only index Redmine attachments') { $onlyfiles = 1 }
   opts.on('-r', '--repositories',       'Only index Redmine repositories') { $onlyrepos = 1 }
+  opts.on('-d', '--rediss',             'Only index Redmine rediss') { $onlyredis = 1 }
   opts.on('-e', '--environment ENV',
           'Rails ENVIRONMENT (development, testing or production), default production') { |e| $env = e}
   opts.on('-t', '--temp-dir PATH',      'Temporary directory for indexing'){ |t| $tempdir = t }  
@@ -459,7 +461,7 @@ end
 my_log "Redmine environment [RAILS_ENV=#{$env}] correctly loaded ..."
 
 # Indexing files
-unless $onlyrepos
+if $onlyfiles
   unless File.exist?($omindex)
     my_log "#{$omindex} does not exist, exiting...", true
     exit 1
@@ -493,7 +495,7 @@ unless $onlyrepos
 end
 
 # Indexing repositories
-unless $onlyfiles
+if $onlyrepos
   unless File.exist?($scriptindex)
     my_log "#{$scriptindex} does not exist, exiting...", true
     exit 1
@@ -532,6 +534,24 @@ unless $onlyfiles
       delete_log_by_repo_id(zombied_repo_id)
     end
   end
+end
+
+# Indexing rediss
+if $onlyredis
+  # rediss_user_index = RedissUser.search_index
+  # rediss_user_name  = rediss_user_index.name
+  # my_log "- rediss_user_name for #{rediss_user_name}..."
+  # DocUser = Struct.new(:id, :first, :last)
+  # doc_user = RediSearch::Document.for_object(rediss_user_index, DocUser.new("10039", "Gene", "Volkman"))
+  # my_log "- doc_user for #{doc_user}..."
+  # rediss_user = RedissUser.new(first: "Hunt", last: "Lin")
+
+  RedissUser = Struct.new(:id, :name)
+  index = RediSearch::Index.new("user_idx") { text_field :name, phonetic: "dm:en" }
+  index.add RediSearch::Document.for_object(index, RedissUser.new("1", "hunt"))
+  index.add RediSearch::Document.for_object(index, RedissUser.new("2", "jasmine"))
+  search = index.search("hunt").results.inspect
+  my_log "- search = #{search}"
 end
 
 exit 0
