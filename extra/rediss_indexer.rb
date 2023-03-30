@@ -536,22 +536,20 @@ if $onlyrepos
   end
 end
 
+def rediss_user_seeds
+  RedissUser.delete_all
+  RedissUser.insert({ name: "hunt" })
+  RedissUser.reindex
+end
+
 # Indexing rediss
 if $onlyredis
-  # rediss_user_index = RedissUser.search_index
-  # rediss_user_name  = rediss_user_index.name
-  # my_log "- rediss_user_name for #{rediss_user_name}..."
-  # DocUser = Struct.new(:id, :first, :last)
-  # doc_user = RediSearch::Document.for_object(rediss_user_index, DocUser.new("10039", "Gene", "Volkman"))
-  # my_log "- doc_user for #{doc_user}..."
-  # rediss_user = RedissUser.new(first: "Hunt", last: "Lin")
-
-  RedissUser = Struct.new(:id, :name)
-  index = RediSearch::Index.new("user_idx") { text_field :name, phonetic: "dm:en" }
-  index.add RediSearch::Document.for_object(index, RedissUser.new("1", "hunt"))
-  index.add RediSearch::Document.for_object(index, RedissUser.new("2", "jasmine"))
-  search = index.search("hunt").results.inspect
-  my_log "- search = #{search}"
+  rediss_user_seeds
+  rediss_user_index = RedissUser.search_index
+  my_log "- rediss_user_index for #{rediss_user_index}..."
+  rediss_user_search = rediss_user_index.search("hunt")
+  rediss_user_results = rediss_user_search.results.inspect
+  my_log "- rediss_user_results = #{rediss_user_results}"
 end
 
 exit 0
