@@ -1,7 +1,7 @@
 # encoding: utf-8
 # frozen_string_literal: true
 #
-# Redmine Xapian is a Redmine plugin to allow attachments searches by content.
+# Redmine Rediss is a Redmine plugin to allow attachments searches by content.
 #
 # Copyright © 2010    Xabier Elkano
 # Copyright © 2015-22 Karel Pičman <karel.picman@kontron.com>
@@ -21,19 +21,19 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 require 'redmine'
-require File.dirname(__FILE__) + '/lib/redmine_xapian'
+require File.dirname(__FILE__) + '/lib/redmine_rediss'
 
 Redmine::Plugin.register :redmine_xapian do
-  name 'Xapian search plugin'
-  author 'Xabier Elkano/Karel Pičman'
-  url 'https://www.redmine.org/plugins/xapian_search'
-  author_url 'https://github.com/xelkano/redmine_xapian/graphs/contributors'
+  name 'Rediss search plugin'
+  author 'Hunt Redmine'
+  url 'https://www.redmine.org/plugins/rediss_search'
+  author_url 'https://github.com/uhuntu/redmine_rediss/graphs/contributors'
 
   description 'With this plugin you will be able to do searches by file name and by strings inside your documents'
   version '3.0.2'
   requires_redmine version_or_higher: '4.1.0'
 
-  settings partial: 'settings/redmine_xapian_settings',
+  settings partial: 'settings/redmine_rediss_settings',
     default: {
       'enable' => true,
       'index_database' => File.expand_path('file_index', Rails.root),
@@ -49,4 +49,5 @@ Redmine::Plugin.register :redmine_xapian do
  Redmine::Search.map do |search|
    search.register :attachments
    search.register :repofiles
+   search.register :issues
  end

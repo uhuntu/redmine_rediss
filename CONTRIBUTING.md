@@ -1,4 +1,4 @@
-## How to contribute to Redmine Xapian plugin
+## How to contribute to Redmine Rediss plugin
 
 #### **Did you find a bug?**
 

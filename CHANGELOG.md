@@ -1,4 +1,4 @@
-Changelog for Redmine Xapian
+Changelog for Redmine Rediss
 ==========================
 
 3.0.2 *2022-11-01*
