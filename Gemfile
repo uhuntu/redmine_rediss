@@ -21,7 +21,5 @@
 
 source 'https://rubygems.org' do
 
-gem 'redi_search'
-
 end
 
