@@ -1,7 +1,7 @@
 # encoding: utf-8
 # frozen_string_literal: true
 #
-# Redmine Xapian is a Redmine plugin to allow attachments searches by content.
+# Redmine Rediss is a Redmine plugin to allow attachments searches by content.
 #
 # Copyright © 2015-22 Karel Pičman <karel.picman@kontron.com>
 #
@@ -20,7 +20,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 desc <<-END_DESC
-Xapian set repository identifiers task
+Rediss set repository identifiers task
   Set a default identifier for repositories that haven't got one
 
 Available options:
@@ -28,19 +28,19 @@ Available options:
   dry_run - test, no changes to the database
 
 Example:
-  bundle exec rake redmine:xapian_set_identifiers RAILS_ENV="production"
-  bundle exec rake redmine:xapian_set_identifiers identifier='main' RAILS_ENV="production"
-  bundle exec rake redmine:xapian_set_identifiers identifier='main' dry_run=1 RAILS_ENV="production"
+  bundle exec rake redmine:rediss_set_identifiers RAILS_ENV="production"
+  bundle exec rake redmine:rediss_set_identifiers identifier='main' RAILS_ENV="production"
+  bundle exec rake redmine:rediss_set_identifiers identifier='main' dry_run=1 RAILS_ENV="production"
 END_DESC
 
 namespace :redmine do
-  task :xapian_set_identifiers => :environment do
-    m = XapianRepositoryIdentifier.new
+  task :rediss_set_identifiers => :environment do
+    m = RedissRepositoryIdentifier.new
     m.set_identifier
   end
 end
 
-class XapianRepositoryIdentifier
+class RedissRepositoryIdentifier
 
   def initialize
     @dry_run = ENV['dry_run']

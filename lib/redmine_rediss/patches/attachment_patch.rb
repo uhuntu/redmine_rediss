@@ -1,7 +1,7 @@
 # encoding: utf-8
 # frozen_string_literal: true
 #
-# Redmine Xapian is a Redmine plugin to allow attachments searches by content.
+# Redmine Rediss is a Redmine plugin to allow attachments searches by content.
 #
 # Copyright © 2010    Xabier Elkano
 # Copyright © 2015-22 Karel Pičman <karel.picman@kontron.com>
@@ -20,7 +20,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-module RedmineXapian
+module RedmineRediss
   module Patches
     module AttachmentPatch
     
@@ -70,10 +70,10 @@ module RedmineXapian
           search_results.concat search_for_wiki_page_attachments(user, search_data)
           search_results.concat search_for_project_files(user, search_data)
           unless options[:titles_only]
-            Rails.logger.debug "Call xapian search service for #{name}"
-            xapian_results = XapianSearchService.search(search_data)
-            search_results.concat xapian_results unless xapian_results.blank?
-            Rails.logger.debug "Call xapian search service for #{name} completed"
+            Rails.logger.debug "Call rediss search service for #{name}"
+            rediss_results = RedissSearchService.search(search_data)
+            search_results.concat rediss_results unless rediss_results.blank?
+            Rails.logger.debug "Call rediss search service for #{name} completed"
           end
           search_results
         end
@@ -189,5 +189,5 @@ module RedmineXapian
   end
 end
 
-Attachment.send :include, RedmineXapian::Patches::AttachmentPatch
-Attachment.send :prepend, RedmineXapian::Patches::AttachmentPatch
+Attachment.send :include, RedmineRediss::Patches::AttachmentPatch
+Attachment.send :prepend, RedmineRediss::Patches::AttachmentPatch

@@ -1,7 +1,7 @@
 # encoding: utf-8
 # frozen_string_literal: true
 #
-# Redmine Xapian is a Redmine plugin to allow attachments searches by content.
+# Redmine Rediss is a Redmine plugin to allow attachments searches by content.
 #
 # Copyright © 2010    Xabier Elkano
 # Copyright © 2015-22 Karel Pičman <karel.picman@kontron.com>
@@ -22,19 +22,18 @@
 
 require 'uri'
 
-module RedmineXapian
+module RedmineRediss
   include ContainerTypeHelper
-  module XapianSearch
+  module RedissSearch
 
-
-    def xapian_search(tokens, limit_options, projects_to_search, all_words, user, xapian_file)
-      Rails.logger.debug 'XapianSearch::xapian_search'
+    def rediss_search(tokens, limit_options, projects_to_search, all_words, user, rediss_file)
+      Rails.logger.debug 'RedissSearch::rediss_search'
       xpattachments = []
-      return nil unless Setting.plugin_redmine_xapian['enable']
-      Rails.logger.debug "Global settings dump #{Setting.plugin_redmine_xapian.inspect}"
-      stemming_lang = Setting.plugin_redmine_xapian['stemming_lang'].rstrip
+      return nil unless Setting.plugin_redmine_rediss['enable']
+      Rails.logger.debug "Global settings dump #{Setting.plugin_redmine_rediss.inspect}"
+      stemming_lang = Setting.plugin_redmine_rediss['stemming_lang'].rstrip
       Rails.logger.debug "stemming_lang: #{stemming_lang}"
-      stemming_strategy = Setting.plugin_redmine_xapian['stemming_strategy'].rstrip
+      stemming_strategy = Setting.plugin_redmine_rediss['stemming_strategy'].rstrip
       Rails.logger.debug "stemming_strategy: #{stemming_strategy}"
       databasepath = get_database_path(xapian_file)
       Rails.logger.debug "databasepath: #{databasepath}"
@@ -42,7 +41,7 @@ module RedmineXapian
       begin
         database = Xapian::Database.new(databasepath)
       rescue => e
-        Rails.logger.error "Can't open Xapian database #{databasepath} - #{e.inspect}"
+        Rails.logger.error "Can't open Rediss database #{databasepath} - #{e.inspect}"
         return nil
       end
 

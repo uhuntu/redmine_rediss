@@ -1,7 +1,7 @@
 # encoding: utf-8
 # frozen_string_literal: true
 #
-# Redmine Xapian is a Redmine plugin to allow attachments searches by content.
+# Redmine Rediss is a Redmine plugin to allow attachments searches by content.
 #
 # Copyright © 2010    Xabier Elkano
 # Copyright © 2015-22 Karel Pičman <karel.picman@kontron.com>
@@ -20,7 +20,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-module RedmineXapian
+module RedmineRediss
   module SearchHelper
     
     def link_to_container(attachment)

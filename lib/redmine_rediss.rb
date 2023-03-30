@@ -1,7 +1,7 @@
 # encoding: utf-8
 # frozen_string_literal: true
 #
-# Redmine Xapian is a Redmine plugin to allow attachments searches by content.
+# Redmine Rediss is a Redmine plugin to allow attachments searches by content.
 #
 # Copyright © 2010    Xabier Elkano
 # Copyright © 2015-22 Karel Pičman <karel.picman@kontron.com>
@@ -20,20 +20,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-module RedmineXapian
-  module Hooks
-    module Views
+# Libraries
+require File.dirname(__FILE__) + '/redmine_rediss/search_data'
+require File.dirname(__FILE__) + '/redmine_rediss/rediss_search_service'
 
-      class BaseViewHooks < Redmine::Hook::ViewListener
+# Patches
+require File.dirname(__FILE__) + '/redmine_rediss/patches/attachment_patch'
+require File.dirname(__FILE__) + '/redmine_rediss/patches/search_controller_patch'
 
-        def view_layouts_base_html_head(context={})
-          if context[:controller].class.name == 'SearchController'
-            "\n".html_safe + stylesheet_link_tag('redmine_xapian', plugin: :redmine_xapian)
-          end
-        end
-
-      end
-
-    end
-  end
-end
+# Hooks
+# Views
+require File.dirname(__FILE__) + '/redmine_rediss/hooks/views/base_view_hooks'

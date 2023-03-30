@@ -1,7 +1,7 @@
 # encoding: utf-8
 # frozen_string_literal: true
 #
-# Redmine Xapian is a Redmine plugin to allow attachments searches by content.
+# Redmine Rediss is a Redmine plugin to allow attachments searches by content.
 #
 # Copyright © 2010   Xabier Elkano
 # Copyright © 2015-22 Karel Pičman <karel.picman@kontron.com>
@@ -20,28 +20,28 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-module RedmineXapian
+module RedmineRediss
   module Patches
     module SearchControllerPatch
 
-      SearchController.helper ::RedmineXapian::SearchHelper
+      SearchController.helper ::RedmineRediss::SearchHelper
 
       def index
         @question = params[:q]&.strip || ""
         # Plugin change do
         #@all_words = params[:all_words] ? params[:all_words].present? : true
         #@titles_only = params[:titles_only] ? params[:titles_only].present? : false
-        if Setting.plugin_redmine_xapian['save_search_scope']
+        if Setting.plugin_redmine_rediss['save_search_scope']
           if params[:all_words]
             @all_words = params[:all_words].present?
             @titles_only = params[:titles_only].present?
             preferences = User.current.pref
-            preferences[:xapian_search_option] = []
-            preferences[:xapian_search_option] << 'all_words' if @all_words
-            preferences[:xapian_search_option] << 'titles_only' if @titles_only
+            preferences[:rediss_search_option] = []
+            preferences[:rediss_search_option] << 'all_words' if @all_words
+            preferences[:rediss_search_option] << 'titles_only' if @titles_only
             preferences.save!
           else
-            pref = User.current.pref[:xapian_search_option]
+            pref = User.current.pref[:rediss_search_option]
             @all_words = pref ? pref.include?('all_words') : true
             @titles_only = pref ? pref.include?('titles_only') : false
           end
@@ -114,13 +114,13 @@ module RedmineXapian
 
         @scope = @object_types.select {|t| params[t]}
         # Plugin change do
-        # TODO: Setting.plugin_redmine_xapian doesn't work in GitHub Actions
-        if Setting.plugin_redmine_xapian['save_search_scope']
+        # TODO: Setting.plugin_redmine_rediss doesn't work in GitHub Actions
+        if Setting.plugin_redmine_rediss['save_search_scope']
           if @scope.empty?
-            pref = User.current.pref[:xapian_search_scope]
+            pref = User.current.pref[:rediss_search_scope]
             @scope =  pref & @object_types if pref
           else
-            User.current.pref[:xapian_search_scope] = @scope
+            User.current.pref[:rediss_search_scope] = @scope
             User.current.pref.save!
           end
         end
@@ -154,4 +154,4 @@ module RedmineXapian
   end
 end
 
-SearchController.send(:prepend, RedmineXapian::Patches::SearchControllerPatch)
+SearchController.send(:prepend, RedmineRediss::Patches::SearchControllerPatch)
