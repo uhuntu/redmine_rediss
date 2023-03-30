@@ -35,44 +35,44 @@ module RedmineRediss
       Rails.logger.debug "stemming_lang: #{stemming_lang}"
       stemming_strategy = Setting.plugin_redmine_rediss['stemming_strategy'].rstrip
       Rails.logger.debug "stemming_strategy: #{stemming_strategy}"
-      databasepath = get_database_path(xapian_file)
+      databasepath = get_database_path(rediss_file)
       Rails.logger.debug "databasepath: #{databasepath}"
 
       begin
-        database = Xapian::Database.new(databasepath)
+        database = Rediss::Database.new(databasepath)
       rescue => e
         Rails.logger.error "Can't open Rediss database #{databasepath} - #{e.inspect}"
         return nil
       end
 
       # Start an enquire session.
-      enquire = Xapian::Enquire.new(database)
+      enquire = Rediss::Enquire.new(database)
 
       # Combine the rest of the command line arguments with spaces between
       # them, so that simple queries don't have to be quoted at the shell
       # level.
       query_string = tokens.map{ |x| !(x[-1,1].eql?'*')? x+'*': x }.join(' ')
-      # Parse the query string to produce a Xapian::Query object.
-      qp = Xapian::QueryParser.new
-      stemmer = Xapian::Stem.new(stemming_lang)
+      # Parse the query string to produce a Rediss::Query object.
+      qp = Rediss::QueryParser.new
+      stemmer = Rediss::Stem.new(stemming_lang)
       qp.stemmer = stemmer
       qp.database = database
       case stemming_strategy
         when 'STEM_NONE'
-          qp.stemming_strategy = Xapian::QueryParser::STEM_NONE
+          qp.stemming_strategy = Rediss::QueryParser::STEM_NONE
         when 'STEM_SOME'
-          qp.stemming_strategy = Xapian::QueryParser::STEM_SOME
+          qp.stemming_strategy = Rediss::QueryParser::STEM_SOME
         when 'STEM_ALL'
-          qp.stemming_strategy = Xapian::QueryParser::STEM_ALL
+          qp.stemming_strategy = Rediss::QueryParser::STEM_ALL
       end
       if all_words
-        qp.default_op = Xapian::Query::OP_AND
+        qp.default_op = Rediss::Query::OP_AND
       else
-        qp.default_op = Xapian::Query::OP_OR
+        qp.default_op = Rediss::Query::OP_OR
       end
 
-      flags = Xapian::QueryParser::FLAG_WILDCARD
-      flags |= Xapian::QueryParser::FLAG_CJK_NGRAM if Setting.plugin_redmine_xapian['enable_cjk_ngrams']
+      flags = Rediss::QueryParser::FLAG_WILDCARD
+      flags |= Rediss::QueryParser::FLAG_CJK_NGRAM if Setting.plugin_redmine_rediss['enable_cjk_ngrams']
       query = qp.parse_query(query_string, flags)
       Rails.logger.debug "query_string is: #{query_string}"
       Rails.logger.debug "Parsed query is: #{query.description}"
@@ -85,12 +85,12 @@ module RedmineRediss
 
       # Display the results.
       Rails.logger.debug "Matches 1-#{matchset.size} records:"
-      Rails.logger.debug "Searching for #{(xapian_file == 'Repofile') ? 'repofiles' : 'attachments'}"
+      Rails.logger.debug "Searching for #{(rediss_file == 'Repofile') ? 'repofiles' : 'attachments'}"
       i = 0
       p = URI::Parser.new
 
       matchset.matches.each do |m|
-        if xapian_file == 'Repofile'
+        if rediss_file == 'Repofile'
           if m.document.data =~ /^date=(.+)\W+sample=(.+)\W+url=(.+)\W/
             dochash = { date: $1, sample: $2, url: p.unescape($3) }
             repo_file = process_repo_file(projects_to_search, dochash, user, i)
@@ -101,7 +101,7 @@ module RedmineRediss
           else
             Rails.logger.error "Wrong format of document data: #{m.document.data}"
           end
-        elsif xapian_file == 'Attachment'
+        elsif rediss_file == 'Attachment'
           if m.document.data =~ /^url=(.+)\W+sample=(.+)\W+(author|type|caption|modtime|size)=/
             dochash = { url: p.unescape($1), sample: $2 }
             attachment = process_attachment(projects_to_search, dochash, user)
@@ -113,7 +113,7 @@ module RedmineRediss
           end
         end
       end
-      Rails.logger.debug 'Xapian searched'
+      Rails.logger.debug 'Rediss searched'
       xpattachments.map{ |a| [a.created_on, a.id] }
     end
 
@@ -226,12 +226,12 @@ module RedmineRediss
       repository_attachment
     end
 
-    def get_database_path(xapian_file)
-      if xapian_file == 'Repofile'
-        File.join Setting.plugin_redmine_xapian['index_database'].rstrip, 'repodb'
+    def get_database_path(rediss_file)
+      if rediss_file == 'Repofile'
+        File.join Setting.plugin_redmine_rediss['index_database'].rstrip, 'repodb'
       else
-        File.join Setting.plugin_redmine_xapian['index_database'].rstrip,
-          Setting.plugin_redmine_xapian['stemming_lang'].rstrip
+        File.join Setting.plugin_redmine_rediss['index_database'].rstrip,
+          Setting.plugin_redmine_rediss['stemming_lang'].rstrip
       end
     end
 

@@ -41,7 +41,7 @@ $scriptindex  = '/usr/bin/scriptindex'
 # omindex binary path
 $omindex = '/usr/bin/omindex'
 
-# Directory containing Xapian databases for omindex (Attachments indexing)
+# Directory containing Rediss databases for omindex (Attachments indexing)
 $dbrootpath = File.expand_path('file_index', $redmine_root)
 
 # Verbose output, values of 0 no verbose, greater than 0 verbose output
@@ -119,7 +119,7 @@ FORMAT_HANDLERS = {
 VERSION = '0.2'
 
 optparse = OptionParser.new do |opts|
-  opts.banner = 'Usage: xapian_indexer.rb [OPTIONS...]'
+  opts.banner = 'Usage: rediss_indexer.rb [OPTIONS...]'
   opts.separator('')
   opts.separator('Index redmine files and repositories')
   opts.separator('')  
@@ -142,8 +142,8 @@ optparse = OptionParser.new do |opts|
   opts.on('-R', '--retry-failed', 'retry files which omindex failed to extract text') { $retryfailed = 1 }
   opts.separator('')
   opts.separator('Examples:')
-  opts.separator('  xapian_indexer.rb -f -s english,italian -v')
-  opts.separator('  xapian_indexer.rb -p project_identifier -x -t /tmpfs -v')
+  opts.separator('  rediss_indexer.rb -f -s english,italian -v')
+  opts.separator('  rediss_indexer.rb -p project_identifier -x -t /tmpfs -v')
   opts.separator('')
   opts.summary_width = 25
 end
@@ -417,7 +417,7 @@ def add_or_update_index(databasepath, indexconf, project, repository, identifier
     my_log "Index command: #{$scriptindex} -s #{$user_stem_lang} #{databasepath} #{indexconf.path} #{itext.path}"
     system_or_raise "#{$scriptindex} -s english #{databasepath} #{indexconf.path} #{itext.path}"
     itext.unlink    
-    my_log 'New doc added to xapian database'
+    my_log 'New doc added to rediss database'
   rescue => e
     my_log e.message, true
   end

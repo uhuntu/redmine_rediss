@@ -23,7 +23,7 @@
 require 'redmine'
 require File.dirname(__FILE__) + '/lib/redmine_rediss'
 
-Redmine::Plugin.register :redmine_xapian do
+Redmine::Plugin.register :redmine_rediss do
   name 'Rediss search plugin'
   author 'Hunt Redmine'
   url 'https://www.redmine.org/plugins/rediss_search'

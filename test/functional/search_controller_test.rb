@@ -1,7 +1,7 @@
 # encoding: utf-8
 # frozen_string_literal: true
 #
-# Redmine Xapian is a Redmine plugin to allow attachments searches by content.
+# Redmine Rediss is a Redmine plugin to allow attachments searches by content.
 #
 # Copyright © 2010    Xabier Elkano
 # Copyright © 2015-22 Karel Pičman <karel.picman@kontron.com>
@@ -29,17 +29,17 @@ class SearchControllerTest < Redmine::ControllerTest
 
   def setup    
     attachment = Attachment.find_by(id: 1)
-    @xapian_data = attachment ? [[attachment.created_on, attachment.id]] : []
+    @rediss_data = attachment ? [[attachment.created_on, attachment.id]] : []
   end
 
-  def test_search_with_xapian
-    RedmineXapian::XapianSearchService.expects(:search).returns(@xapian_data).once
+  def test_search_with_rediss
+    RedmineRediss::RedissSearchService.expects(:search).returns(@rediss_data).once
     get :index, params: { q: 'xyz', attachments: true, titles_only: '' }
     assert_response :success
   end
 
-  def test_search_without_xapian
-    RedmineXapian::XapianSearchService.expects(:search).never
+  def test_search_without_rediss
+    RedmineRediss::RedissSearchService.expects(:search).never
     get :index, params: { q: 'xyz', attachments: true, titles_only: true }
     assert_response :success
   end 

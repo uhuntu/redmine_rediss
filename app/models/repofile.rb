@@ -21,7 +21,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class Repofile
-  include RedmineXapian
+  include RedmineRediss
   include ActiveModel::Model
   include ActiveRecord::Reflection
   include Redmine::Acts::Searchable
@@ -115,10 +115,10 @@ class Repofile
     search_data = SearchData.new self, tokens, projects, options, user, name
     search_results = []
     unless options[:titles_only]
-      Rails.logger.debug "Call xapian search service for #{name.inspect}"          
-      xapian_results = XapianSearchService.search search_data
-      search_results.concat xapian_results unless xapian_results.blank?
-      Rails.logger.debug "Call xapian search service for  #{name.inspect} completed"          
+      Rails.logger.debug "Call rediss search service for #{name.inspect}"          
+      rediss_results = RedissSearchService.search search_data
+      search_results.concat rediss_results unless rediss_results.blank?
+      Rails.logger.debug "Call rediss search service for  #{name.inspect} completed"          
     end
     search_results
   end           

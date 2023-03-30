@@ -1,6 +1,6 @@
 # encoding: utf-8
 #
-# Redmine Xapian is a Redmine plugin to allow attachments searches by content.
+# Redmine Rediss is a Redmine plugin to allow attachments searches by content.
 #
 # Copyright © 2010    Xabier Elkano
 # Copyright © 2015-22 Karel Pičman <karel.picman@kontron.com>
@@ -21,9 +21,9 @@
 
 # English strings go here for Rails i18n
 en:
-  label_enable_redmine_xapian: Enable xapian engine to allow searches on attachments and repositories
+  label_enable_redmine_rediss: Enable rediss engine to allow searches on attachments and repositories
 
-  label_index_database: Directory containing Xapian databases
+  label_index_database: Directory containing Rediss databases
   text_stemming: "Set the stemming language, the default is 'english'. Possible values are: %{languages}"  
   label_stemming_lang: Stemming Language  
   label_repository_search: Enable repository search
@@ -34,7 +34,7 @@ en:
   label_stem_all: Stem all
   label_default_stemming_lang: Set default stemming lang
   label_default_stemming_strategy: Set default stemming strategy
-  label_database_error: Database error! Please configure Xapian.
+  label_database_error: Database error! Please configure Rediss.
   label_repofile: Repository
   label_repofile_plural: Repositories  
   text_stemming_info: "This controls how the query parser will apply the stemming algorithm. The default value is
@@ -50,7 +50,7 @@ en:
   text_enable_cjk_ngrams: "With this enabled, spans of CJK characters are split into unigrams and bigrams, with the
     unigrams carrying positional information. Non-CJK characters are split into words as normal. The corresponding
     option needs to have been used at index time.
-    e.g: XAPIAN_CJK_NGRAM=true ruby plugins/redmine_xapian/extra/xapian_indexer.rb -fv"
+    e.g: REDISS_CJK_NGRAM=true ruby plugins/redmine_rediss/extra/rediss_indexer.rb -fv"
   label_file-attachment_plural: Files/Attachments
-  warning_xapian_not_available: No Xapian search engine interface for Ruby installed => Full-text search won't be 
-    available. Install a ruby-xapian package or an alternative Xapian binding (https://xapian.org).
+  warning_rediss_not_available: No Rediss search engine interface for Ruby installed => Full-text search won't be 
+    available. Install a ruby-rediss package or an alternative Rediss binding (https://rediss.org).

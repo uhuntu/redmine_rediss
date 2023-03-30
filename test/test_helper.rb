@@ -1,7 +1,7 @@
 # encoding: utf-8
 # frozen_string_literal: true
 #
-# Redmine Xapian is a Redmine plugin to allow attachments searches by content.
+# Redmine Rediss is a Redmine plugin to allow attachments searches by content.
 #
 # Copyright © 2010    Xabier Elkano
 # Copyright © 2015-22 Karel Pičman <karel.picman@kontron.com>
@@ -23,11 +23,11 @@
 require 'simplecov'
 
 SimpleCov.start do
-  add_group 'Models', 'plugins/redmine_xapian/app/models'
-  add_group 'Views', 'plugins/redmine_xapian/app/views'
-  add_group 'Config', 'plugins/redmine_xapian/config'
-  add_group 'Library', 'plugins/redmine_xapian/lib'
-  add_group 'Test', 'plugins/redmine_xapian/test'
+  add_group 'Models', 'plugins/redmine_rediss/app/models'
+  add_group 'Views', 'plugins/redmine_rediss/app/views'
+  add_group 'Config', 'plugins/redmine_rediss/config'
+  add_group 'Library', 'plugins/redmine_rediss/lib'
+  add_group 'Test', 'plugins/redmine_rediss/test'
 end
 
 # Load the normal Rails helper
