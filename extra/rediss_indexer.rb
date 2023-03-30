@@ -99,7 +99,6 @@ MIME_TYPES = {
   'application/javascript' => 'js'
 }.freeze
 
-
 FORMAT_HANDLERS = {
   'pdf' => $pdftotext,
   'doc' => $catdoc,
@@ -223,7 +222,6 @@ def add_log(repository, changeset, status, message = nil)
     my_log "New log for repo #{repo_name(repository)} saved!"
   end
 end
-
 
 def delete_log(repository)
   Indexinglog.where(repository_id: repository.id).delete_all
