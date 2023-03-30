@@ -44,10 +44,17 @@ Redmine::Plugin.register :redmine_rediss do
       'save_search_scope' => false,
       'enable_cjk_ngrams' => false
     }
- end
+end
 
- Redmine::Search.map do |search|
-   search.register :attachments
-   search.register :repofiles
-   search.register :issues
- end
+Redmine::Search.map do |search|
+  search.register :attachments
+  search.register :repofiles
+  search.register :issues
+end
+
+RediSearch.configure do |config|
+  config.redis_config = {
+    host: "127.0.0.1",
+    port: "6379"
+  }
+end
