@@ -62,10 +62,38 @@ module RedmineRediss
 
       private
 
+        # self = Issue
+        # tokens = ["test"]
+        # projects = 
+        
+        # options = {
+        #   :all_words=>true, 
+        #   :titles_only=>false, 
+        #   :attachments=>"0", 
+        #   :open_issues=>false, 
+        #   :params=>{
+        #     "utf8"=>"✓", 
+        #     "scope"=>"", 
+        #     "q"=>"test", 
+        #     "controller"=>"search", 
+        #     "action"=>"index"
+        #   }
+        # }
+        
+        # user = Redmine Admin
+        # name = Issue
+
         def search(tokens, user, projects = nil, options = {})
           Rails.logger.debug 'Issue::search'
           search_data = SearchData.new(self, tokens, projects, options, user, name)
-          search_results = search_for_issues_attachments(user, search_data)
+          Rails.logger.info "search_data = #{search_data}"
+          Rails.logger.info "self = #{self}"
+          Rails.logger.info "tokens = #{tokens}"
+          Rails.logger.info "projects = #{projects}"
+          Rails.logger.info "options = #{options}"
+          Rails.logger.info "user = #{user}"
+          Rails.logger.info "name = #{name}"
+          search_results = search_for_issues_rediss(user, search_data)
           # unless options[:titles_only]
           #   Rails.logger.debug "Call rediss search service for #{name}"
           #   rediss_results = RedissSearchService.search(search_data)
@@ -75,19 +103,20 @@ module RedmineRediss
           search_results
         end
 
-        def search_for_issues_attachments(user, search_data)
+        def search_for_issues_rediss(user, search_data)
           results = []
-          # sql = +"#{Attachment.table_name}.container_type = 'Issue' AND #{Project.table_name}.status = ? AND #{Project.allowed_to_condition(user, :view_issues)}"
-          # sql << " AND #{search_data.project_conditions}" if search_data.project_conditions
-          # Attachment.joins("JOIN #{Issue.table_name} ON #{Attachment.table_name}.container_id = #{Issue.table_name}.id")
-          #   .joins("JOIN #{Project.table_name} ON #{Issue.table_name}.project_id = #{Project.table_name}.id")
-          #     .where(sql, Project::STATUS_ACTIVE).scoping do
-          #       where(tokens_condition(search_data)).scoping do
-          #         results = where(search_data.limit_options)
-          #           .distinct
-          #           .pluck(searchable_options[:date_column], :id)
-          #       end
-          #     end
+          sql = +"#{Project.table_name}.status = ? AND #{Project.allowed_to_condition(user, :view_issues)}"
+          sql << " AND #{search_data.project_conditions}" if search_data.project_conditions
+          Issue
+            .joins("JOIN #{Project.table_name}  ON #{Issue.table_name}.project_id   = #{Project.table_name}.id")
+            .where(sql, Project::STATUS_ACTIVE).scoping do
+              where(tokens_condition(search_data)).scoping do
+                results = 
+                  where(search_data.limit_options)
+                  .distinct
+                  .pluck(searchable_options[:date_column], :id)
+              end
+            end
           results
         end
 
