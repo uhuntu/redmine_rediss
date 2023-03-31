@@ -548,7 +548,18 @@ def user_seeds
   my_log "- users = #{users}"
 end
 
-user_seeds
+require 'redi_search'
+
+RediSearch.configure do |config|
+  config.redis_config = {
+    host: "127.0.0.1",
+    port: "6379"
+  }
+end
+
+my_log "- User.search_index.name = #{User.search_index.name}"
+
+User.search_index.search("hunt").results
 
 # Indexing rediss
 if $onlyredis
