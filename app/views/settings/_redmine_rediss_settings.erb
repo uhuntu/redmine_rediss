@@ -22,10 +22,10 @@
 %>
 
 <% begin %>
-  <% require 'rediss' %>
+  <% require 'redi_search' %>
   <% rediss_disabled = false %>
 <% rescue LoadError => e %>
-  <% Rails.logger.warn e.message %>
+  <% Rails.logger.error e.message %>
   <% rediss_disabled = true %>
 <% end %>
 

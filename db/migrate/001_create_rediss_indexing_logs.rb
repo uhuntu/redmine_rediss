@@ -19,16 +19,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-class CreateIndexinglogs < ActiveRecord::Migration[4.2]
+class CreateRedissIndexingLogs < ActiveRecord::Migration[4.2]
 
   def change
-    create_table :indexinglogs do |t|
-      t.column :repository_id, :integer
-      t.column :changeset_id, :integer
-      t.column :status, :integer
-      t.column :message, :string
-      t.column :created_at, :timestamp
-      t.column :updated_at, :timestamp
+    create_table :rediss_indexing_logs do |t|
+      t.column :repository_id,  :integer
+      t.column :changeset_id,   :integer
+      t.column :status,         :integer
+      t.column :message,        :string
+      t.column :created_at,     :timestamp
+      t.column :updated_at,     :timestamp
     end
   end
 

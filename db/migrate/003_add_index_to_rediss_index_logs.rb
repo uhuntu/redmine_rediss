@@ -19,10 +19,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-class AddIndexToIndexlogs < ActiveRecord::Migration[4.2]
+class AddIndexToRedissIndexLogs < ActiveRecord::Migration[4.2]
 
   def change
-    add_index :indexinglogs, :repository_id
+    add_index :rediss_indexing_logs, :repository_id
   end
 
 end
