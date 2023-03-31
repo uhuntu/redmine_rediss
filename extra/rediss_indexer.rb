@@ -536,12 +536,6 @@ if $onlyrepos
   end
 end
 
-def rediss_user_seeds
-  RedissUser.delete_all
-  RedissUser.insert({ name: "hunt" })
-  RedissUser.reindex
-end
-
 def user_seeds
   users_arel = User.arel_table
   users = User.all.pluck(:login)
@@ -563,7 +557,9 @@ User.search_index.search("hunt").results
 
 # Indexing rediss
 if $onlyredis
-  rediss_user_seeds
+  RedissUser.delete_all
+  RedissUser.insert({ name: "hunt" })
+  RedissUser.reindex
   rediss_user_index = RedissUser.search_index
   my_log "- rediss_user_index for #{rediss_user_index}..."
   rediss_user_search = rediss_user_index.search("hunt")
