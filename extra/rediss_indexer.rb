@@ -542,6 +542,14 @@ def rediss_user_seeds
   RedissUser.reindex
 end
 
+def user_seeds
+  users_arel = User.arel_table
+  users = User.all.pluck(:login)
+  my_log "- users = #{users}"
+end
+
+user_seeds
+
 # Indexing rediss
 if $onlyredis
   rediss_user_seeds
