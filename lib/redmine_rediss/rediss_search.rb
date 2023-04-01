@@ -27,69 +27,77 @@ module RedmineRediss
   module RedissSearch
 
     def rediss_search(tokens, limit_options, projects_to_search, all_words, user, rediss_file)
-      Rails.logger.debug 'RedissSearch::rediss_search'
+      Rails.logger.info 'RedissSearch::rediss_search'
       xpattachments = []
       return nil unless Setting.plugin_redmine_rediss['enable']
-      Rails.logger.debug "Global settings dump #{Setting.plugin_redmine_rediss.inspect}"
+      Rails.logger.info "Global settings dump #{Setting.plugin_redmine_rediss.inspect}"
       stemming_lang = Setting.plugin_redmine_rediss['stemming_lang'].rstrip
-      Rails.logger.debug "stemming_lang: #{stemming_lang}"
+      Rails.logger.info "stemming_lang: #{stemming_lang}"
       stemming_strategy = Setting.plugin_redmine_rediss['stemming_strategy'].rstrip
-      Rails.logger.debug "stemming_strategy: #{stemming_strategy}"
+      Rails.logger.info "stemming_strategy: #{stemming_strategy}"
       databasepath = get_database_path(rediss_file)
-      Rails.logger.debug "databasepath: #{databasepath}"
+      Rails.logger.info "databasepath: #{databasepath}"
 
       begin
-        database = Rediss::Database.new(databasepath)
+        if rediss_file != 'Issue'
+          return nil
+        end
+        Issue.reindex
+        # database = Rediss::Database.new(databasepath)
       rescue => e
         Rails.logger.error "Can't open Rediss database #{databasepath} - #{e.inspect}"
         return nil
       end
 
-      # Start an enquire session.
-      enquire = Rediss::Enquire.new(database)
+      # Start an index session.
+      index = Issue.search_index
+      Rails.logger.info "issue_index: #{index.name}"
 
       # Combine the rest of the command line arguments with spaces between
       # them, so that simple queries don't have to be quoted at the shell
       # level.
       query_string = tokens.map{ |x| !(x[-1,1].eql?'*')? x+'*': x }.join(' ')
       # Parse the query string to produce a Rediss::Query object.
-      qp = Rediss::QueryParser.new
-      stemmer = Rediss::Stem.new(stemming_lang)
-      qp.stemmer = stemmer
-      qp.database = database
-      case stemming_strategy
-        when 'STEM_NONE'
-          qp.stemming_strategy = Rediss::QueryParser::STEM_NONE
-        when 'STEM_SOME'
-          qp.stemming_strategy = Rediss::QueryParser::STEM_SOME
-        when 'STEM_ALL'
-          qp.stemming_strategy = Rediss::QueryParser::STEM_ALL
-      end
-      if all_words
-        qp.default_op = Rediss::Query::OP_AND
-      else
-        qp.default_op = Rediss::Query::OP_OR
-      end
+      # qp = Rediss::QueryParser.new
+      # stemmer = Rediss::Stem.new(stemming_lang)
+      # qp.stemmer = stemmer
+      # qp.database = database
+      # case stemming_strategy
+      #   when 'STEM_NONE'
+      #     qp.stemming_strategy = Rediss::QueryParser::STEM_NONE
+      #   when 'STEM_SOME'
+      #     qp.stemming_strategy = Rediss::QueryParser::STEM_SOME
+      #   when 'STEM_ALL'
+      #     qp.stemming_strategy = Rediss::QueryParser::STEM_ALL
+      # end
+      # if all_words
+      #   qp.default_op = Rediss::Query::OP_AND
+      # else
+      #   qp.default_op = Rediss::Query::OP_OR
+      # end
 
-      flags = Rediss::QueryParser::FLAG_WILDCARD
-      flags |= Rediss::QueryParser::FLAG_CJK_NGRAM if Setting.plugin_redmine_rediss['enable_cjk_ngrams']
-      query = qp.parse_query(query_string, flags)
-      Rails.logger.debug "query_string is: #{query_string}"
-      Rails.logger.debug "Parsed query is: #{query.description}"
+      # flags = Rediss::QueryParser::FLAG_WILDCARD
+      # flags |= Rediss::QueryParser::FLAG_CJK_NGRAM if Setting.plugin_redmine_rediss['enable_cjk_ngrams']
+      # query = qp.parse_query(query_string, flags)
+      Rails.logger.info "query_string is: #{query_string}"
+      # Rails.logger.info "Parsed query is: #{query.description}"
 
-      # Find the top 100 results for the query.
-      enquire.query = query
-      matchset = enquire.mset(0, 1000)
+      # Find the top 1000 results for the query.
+      # enquire.query = query
+      # matchset = enquire.mset(0, 1000)
 
-      return nil if matchset.nil?
+      searchset = index.search(query_string)
+      Rails.logger.info "issue_results is: #{searchset.results.inspect}"
+      
+      return nil if searchset.nil?
 
       # Display the results.
-      Rails.logger.debug "Matches 1-#{matchset.size} records:"
-      Rails.logger.debug "Searching for #{(rediss_file == 'Repofile') ? 'repofiles' : 'attachments'}"
+      Rails.logger.info "Results 1-#{searchset.size} records:"
+      Rails.logger.info "Searching for #{rediss_file}"
       i = 0
       p = URI::Parser.new
 
-      matchset.matches.each do |m|
+      searchset.results.each do |s|
         if rediss_file == 'Repofile'
           if m.document.data =~ /^date=(.+)\W+sample=(.+)\W+url=(.+)\W/
             dochash = { date: $1, sample: $2, url: p.unescape($3) }
@@ -111,22 +119,53 @@ module RedmineRediss
           else
             Rails.logger.error "Wrong format of document data: #{m.document.data}"
           end
+        elsif rediss_file == 'Issue'
+          dochash = { url: p.unescape($1), sample: $2 }
+          issue = process_issue(projects_to_search, dochash, user)
+          if issue
+            xpattachments << issue
+          end
         end
       end
-      Rails.logger.debug 'Rediss searched'
+
+      Rails.logger.info 'Rediss searched'
+
       xpattachments.map{ |a| [a.created_on, a.id] }
+
     end
 
   private
 
+    def process_issue(projects, dochash, user)
+      issue = Issue.where(disk_filename: dochash[:url].split('/').last).first
+      if issue
+        Rails.logger.info "Issue created on #{issue.created_on}"
+        Rails.logger.info "Issue's project #{issue.project}"
+        Rails.logger.info "Issue's docattach not nil..:  #{issue}"
+        Rails.logger.info 'Adding issue'
+        project = issue.project
+        allowed = user.allowed_to?(:view_issues, project)
+        projects = [] << projects if projects.is_a?(Project)
+        project_ids = projects.collect(&:id) if projects
+        if allowed && (project_ids.blank? || (issue.project && project_ids.include?(issue.project.id)))
+          Redmine::Search.cache_store.write("Issue-#{issue.id}",
+            dochash[:sample].force_encoding('UTF-8')) if dochash[:sample]
+          return issue
+        else
+          Rails.logger.error 'User without permissions'
+        end
+      end
+      nil
+    end
+
     def process_attachment(projects, dochash, user)
       attachment = Attachment.where(disk_filename: dochash[:url].split('/').last).first
       if attachment
-        Rails.logger.debug "Attachment created on #{attachment.created_on}"
-        Rails.logger.debug "Attachment's project #{attachment.project}"
-        Rails.logger.debug "Attachment's docattach not nil..:  #{attachment}"
+        Rails.logger.info "Attachment created on #{attachment.created_on}"
+        Rails.logger.info "Attachment's project #{attachment.project}"
+        Rails.logger.info "Attachment's docattach not nil..:  #{attachment}"
         if attachment.container
-          Rails.logger.debug 'Adding attachment'
+          Rails.logger.info 'Adding attachment'
           project = attachment.project
           container_type = attachment[:container_type]
           container_permission = ContainerTypeHelper.to_permission(container_type)
@@ -147,7 +186,7 @@ module RedmineRediss
               dochash[:sample].force_encoding('UTF-8')) if dochash[:sample]
             return attachment
           else
-            Rails.logger.warn 'User without permissions'
+            Rails.logger.error 'User without permissions'
           end
         end
       end
@@ -155,19 +194,19 @@ module RedmineRediss
     end
 
     def process_repo_file(projects, dochash, user, id)
-      Rails.logger.debug "Repository file: #{dochash[:url]}"
-      Rails.logger.debug "Repository date: #{dochash[:date]}"
-      Rails.logger.debug "Repository sample field: #{dochash[:sample]}"
+      Rails.logger.info "Repository file: #{dochash[:url]}"
+      Rails.logger.info "Repository date: #{dochash[:date]}"
+      Rails.logger.info "Repository sample field: #{dochash[:sample]}"
       repository_attachment = nil
       if dochash[:url] =~ /^#{Redmine::Utils::relative_url_root}\/projects\/(.+)\/repository\/(?:revisions\/(.*)\/|([a-zA-Z_0-9]*)\/)?(?:revisions\/(.*))?\/?entry\/(?:(?:branches|tags)\/(.+?)\/)?(.+?)(?:\?rev=(.*))?$/
         repo_project_identifier = $1
-        Rails.logger.debug "Project identifier: #{repo_project_identifier}"
+        Rails.logger.info "Project identifier: #{repo_project_identifier}"
         repo_identifier = $3
-        Rails.logger.debug "Repository identifier: #{repo_identifier}"
+        Rails.logger.info "Repository identifier: #{repo_identifier}"
         repo_filename = $6
-        Rails.logger.debug "Repository file: #{repo_filename}"
+        Rails.logger.info "Repository file: #{repo_filename}"
         repo_revision = (!$2.nil? ? $2 : '') + (!$4.nil? ? $4 : '') + (!$5.nil? ? $5 : '') +(!$7.nil? ? $7 : '')
-        Rails.logger.debug "Repository revision: #{repo_revision}"
+        Rails.logger.info "Repository revision: #{repo_revision}"
         project = Project.where(identifier: repo_project_identifier).first
         if project
           if repo_identifier != ''
@@ -176,7 +215,7 @@ module RedmineRediss
             repository = Repository.where(project_id: project.id).first if project
           end
           if repository
-            Rails.logger.debug "Repository found #{repository.identifier}"
+            Rails.logger.info "Repository found #{repository.identifier}"
             projects = [] << projects if projects.is_a?(Project)
             project_ids = projects.collect(&:id) if projects
             allowed = user.allowed_to?(:browse_repository, repository.project)
@@ -209,10 +248,10 @@ module RedmineRediss
                       revision: repository_attachment.revision }
                 Redmine::Search.cache_store.write "Repofile-#{repository_attachment.id}", h.to_s
               else
-                Rails.logger.warn 'No projects to search in'
+                Rails.logger.error 'No projects to search in'
               end
             else
-              Rails.logger.warn 'User without :browse_repository permissions'
+              Rails.logger.error 'User without :browse_repository permissions'
             end
           else
             Rails.logger.error "Repository not found"

@@ -111,14 +111,14 @@ class Repofile
   private
   
   def self.search(tokens, user, projects, options)     
-    Rails.logger.debug 'Repository::search'
+    Rails.logger.info 'Repository::search'
     search_data = SearchData.new self, tokens, projects, options, user, name
     search_results = []
     unless options[:titles_only]
-      Rails.logger.debug "Call rediss search service for #{name.inspect}"          
+      Rails.logger.info "Call rediss search service for #{name.inspect}"          
       rediss_results = RedissSearchService.search search_data
       search_results.concat rediss_results unless rediss_results.blank?
-      Rails.logger.debug "Call rediss search service for  #{name.inspect} completed"          
+      Rails.logger.info "Call rediss search service for  #{name.inspect} completed"          
     end
     search_results
   end           

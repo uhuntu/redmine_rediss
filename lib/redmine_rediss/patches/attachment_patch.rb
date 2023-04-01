@@ -63,17 +63,17 @@ module RedmineRediss
       private
 
         def search(tokens, user, projects = nil, options = {})
-          Rails.logger.debug 'Attachment::search'
+          Rails.logger.info 'Attachment::search'
           search_data = SearchData.new(self, tokens, projects, options, user, name)
           search_results = search_for_issues_attachments(user, search_data)
           search_results.concat search_for_message_attachments(user, search_data)
           search_results.concat search_for_wiki_page_attachments(user, search_data)
           search_results.concat search_for_project_files(user, search_data)
           unless options[:titles_only]
-            Rails.logger.debug "Call rediss search service for #{name}"
+            Rails.logger.info "Call rediss search service for #{name}"
             rediss_results = RedissSearchService.search(search_data)
             search_results.concat rediss_results unless rediss_results.blank?
-            Rails.logger.debug "Call rediss search service for #{name} completed"
+            Rails.logger.info "Call rediss search service for #{name} completed"
           end
           search_results
         end
