@@ -92,7 +92,7 @@ module RedmineRediss
       return nil if searchset.nil?
 
       # Display the results.
-      Rails.logger.info "Results 1-#{searchset.size} records:"
+      Rails.logger.info "Results 1-#{searchset.results.count} records:"
       Rails.logger.info "Searching for #{rediss_file}"
       i = 0
       p = URI::Parser.new
@@ -120,7 +120,8 @@ module RedmineRediss
             Rails.logger.error "Wrong format of document data: #{m.document.data}"
           end
         elsif rediss_file == 'Issue'
-          dochash = { url: p.unescape($1), sample: $2 }
+          Rails.logger.info "s = #{s[:id]}"
+          dochash = { id: s[:id], sample: s[:description] }
           issue = process_issue(projects_to_search, dochash, user)
           if issue
             xpattachments << issue
@@ -137,7 +138,7 @@ module RedmineRediss
   private
 
     def process_issue(projects, dochash, user)
-      issue = Issue.where(disk_filename: dochash[:url].split('/').last).first
+      issue = Issue.where(id: dochash[:id]).first
       if issue
         Rails.logger.info "Issue created on #{issue.created_on}"
         Rails.logger.info "Issue's project #{issue.project}"
