@@ -27,6 +27,7 @@ require File.dirname(__FILE__) + '/redmine_rediss/rediss_search_service'
 # Patches
 require File.dirname(__FILE__) + '/redmine_rediss/patches/attachment_patch'
 require File.dirname(__FILE__) + '/redmine_rediss/patches/search_controller_patch'
+require File.dirname(__FILE__) + '/redmine_rediss/patches/issue_patch'
 
 # Hooks
 # Views
