@@ -42,21 +42,21 @@ module RedmineRediss
         if rediss_file != 'Issue'
           return nil
         end
-        Issue.reindex
+        # Issue.reindex
         # database = Rediss::Database.new(databasepath)
       rescue => e
         Rails.logger.error "Can't open Rediss database #{databasepath} - #{e.inspect}"
         return nil
       end
 
-      # Start an index session.
-      index = Issue.search_index
-      Rails.logger.info "issue_index: #{index.name}"
+      # # Start an index session.
+      # issue_index = Issue.search_index
+      # Rails.logger.info "issue_index: #{issue_index.name}"
 
       # Combine the rest of the command line arguments with spaces between
       # them, so that simple queries don't have to be quoted at the shell
       # level.
-      query_string = tokens.map{ |x| !(x[-1,1].eql?'*')? x+'*': x }.join(' ')
+      query_string = tokens.map{ |x| !(x[-1,1].eql?'*')? x+'': x }.join(' ')
       # Parse the query string to produce a Rediss::Query object.
       # qp = Rediss::QueryParser.new
       # stemmer = Rediss::Stem.new(stemming_lang)
@@ -86,7 +86,57 @@ module RedmineRediss
       # enquire.query = query
       # matchset = enquire.mset(0, 1000)
 
-      searchset = index.search(query_string)
+#####################################################################
+
+      OpenAI.configure do |config|
+        config.access_token = ENV.fetch('OPENAI_ACCESS_TOKEN')
+        config.http_proxy = ENV.fetch('http_proxy')
+      end
+      client = OpenAI::Client.new
+    
+      puts "Getting query_embedding..."
+      query_embed = client.embeddings(
+        parameters: {
+          model: "text-embedding-ada-002",
+          input: query_string
+        }
+      )
+  
+      query_data = query_embed.parsed_response["data"]
+      query_embedding = query_data[0]["embedding"] if !query_data.nil?
+  
+      if query_data.nil?
+        puts "query_data is nil"
+        puts query_embed["error"]
+        puts query_string.nil?
+        abort
+      end
+  
+      query_pack = query_embedding.pack("F*") if !query_embedding.nil?
+      return nil if query_pack.nil?
+  
+      # Start an index session.
+      puts "Rediss Search"
+      issue_index = Issue.search_index
+      Rails.logger.info "issue_index: #{issue_index.name}"
+  
+      index_search = issue_index
+        .search("*=>[KNN 10 @subject_vector $vector AS vector_score]")
+        .return(:subject, :description, :vector_score)
+        .sort_by(:subject)
+        .limit(10)
+        .dialect(2)
+  
+      index_search = index_search
+        .params(:vector, query_pack) if !query_pack.nil?
+  
+      # index_results = index_search.results
+      # index_inspect = index_results.inspect
+      # puts index_results.pluck(:subject, :description)
+
+#####################################################################
+
+      searchset = index_search
       Rails.logger.info "issue_results is: #{searchset.results.inspect}"
       
       return nil if searchset.nil?
@@ -153,7 +203,7 @@ module RedmineRediss
             dochash[:sample].force_encoding('UTF-8')) if dochash[:sample]
           return issue
         else
-          Rails.logger.error 'User without permissions'
+          Rails.logger.error 'User without permissions for process issue in rediss search'
         end
       end
       nil
@@ -187,7 +237,7 @@ module RedmineRediss
               dochash[:sample].force_encoding('UTF-8')) if dochash[:sample]
             return attachment
           else
-            Rails.logger.error 'User without permissions'
+            Rails.logger.error 'User without permissions for process attachment in rediss search'
           end
         end
       end
