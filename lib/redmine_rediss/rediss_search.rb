@@ -118,6 +118,12 @@ module RedmineRediss
       # Start an index session.
       puts "Rediss Search"
       issue_index = Issue.search_index
+
+      if issue_index.nil?
+        Rails.logger.info "issue_index is not existed"
+        return nil
+      end
+
       Rails.logger.info "issue_index: #{issue_index.name}"
   
       index_search = issue_index
