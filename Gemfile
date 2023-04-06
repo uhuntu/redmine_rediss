@@ -21,7 +21,7 @@
 
 source 'https://rubygems.org' do
 
-# gem 'redi_search'
+gem 'redi_search', :path => 'extra/redi_search'
 
 end
 
