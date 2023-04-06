@@ -22,6 +22,7 @@
 source 'https://rubygems.org' do
 
 gem 'redi_search', :path => 'extra/redi_search'
+gem "ruby-openai", :path => 'extra/ruby-openai'
 
 end
 
