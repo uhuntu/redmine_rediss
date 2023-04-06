@@ -557,6 +557,11 @@ RediSearch.configure do |config|
   }
 end
 
+if User.search_index.nil?
+  my_log "- User.search_index is nil"
+  return
+end
+
 my_log "- User.search_index.name = #{User.search_index.name}"
 
 User.search_index.search("hunt").results
