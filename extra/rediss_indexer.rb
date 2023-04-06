@@ -542,12 +542,6 @@ if $onlyrepos
   end
 end
 
-def user_seeds
-  users_arel = User.arel_table
-  users = User.all.pluck(:login)
-  my_log "- users = #{users}"
-end
-
 require 'redi_search'
 
 RediSearch.configure do |config|
@@ -562,20 +556,16 @@ if Issue.search_index.nil?
   return
 end
 
-my_log "- Issue.search_index.name = #{Issue.search_index.name}"
+# my_log "- Issue.search_index.name = #{Issue.search_index.name}"
+# results = Issue.search_index.search("test").results.inspect
+# my_log "results = #{results}"
 
-results = Issue.search_index.search("test").results.inspect
-
-my_log "results = #{results}"
-
-# if User.search_index.nil?
-#   my_log "- User.search_index is nil"
-#   return
-# end
-
-# my_log "- User.search_index.name = #{User.search_index.name}"
-
-# User.search_index.search("hunt").results
+Issue.all.each do |issue|
+  my_log "issue = #{issue}"
+  issue_doc = issue.search_document
+  my_log "issue_doc = #{issue_doc}"
+  break
+end
 
 # Indexing rediss
 if $onlyredis
@@ -588,5 +578,18 @@ if $onlyredis
   rediss_user_results = rediss_user_search.results.inspect
   my_log "- rediss_user_results = #{rediss_user_results}"
 end
+
+def user_seeds
+  users_arel = User.arel_table
+  users = User.all.pluck(:login)
+  my_log "- users = #{users}"
+end
+
+# if User.search_index.nil?
+#   my_log "- User.search_index is nil"
+#   return
+# end
+# my_log "- User.search_index.name = #{User.search_index.name}"
+# User.search_index.search("hunt").results
 
 exit 0
