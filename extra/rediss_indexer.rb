@@ -557,6 +557,14 @@ RediSearch.configure do |config|
   }
 end
 
+# Issue.send :include, RedmineRediss::Patches::IssuePatch
+# Issue.send :prepend, RedmineRediss::Patches::IssuePatch
+
+if Issue.search_index.nil?
+  my_log "- Issue.search_index is nil"
+  return
+end
+
 if User.search_index.nil?
   my_log "- User.search_index is nil"
   return
