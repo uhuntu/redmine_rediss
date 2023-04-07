@@ -559,8 +559,8 @@ if Issue.search_index.nil?
   return
 end
 
-# my_log "- Issue.search_index.name = #{Issue.search_index.name}"
-# results = Issue.search_index.search("test").results.inspect
+my_log "- Issue.search_index.name = #{Issue.search_index.name}"
+results = Issue.search_index.search("test").results.inspect
 # my_log "results = #{results}"
 
 Issue.all.each do |issue|
