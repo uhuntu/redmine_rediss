@@ -26,6 +26,11 @@ module RedmineRediss
     
       def self.included(base)
         base.class_eval do
+          OpenAI.configure do |config|
+            config.access_token = ENV.fetch('OPENAI_ACCESS_TOKEN')
+          end
+          client = OpenAI::Client.new
+          
           redi_search do
             text_field :subject, phonetic: "dm:en"
             text_field :description, phonetic: "dm:en"
@@ -40,6 +45,23 @@ module RedmineRediss
               distance_metric: "COSINE",
               initial_cap: 1024,
               block_size: 1024 do
+                puts "Getting subject_embedding..."
+                subject_text = "#{subject}"
+                subject_embed = client.embeddings(
+                  parameters: {
+                    model: "text-embedding-ada-002",
+                    input: subject_text
+                  }
+                )
+                subject_data = subject_embed.parsed_response["data"]
+                subject_embedding = subject_data[0]["embedding"] if !subject_data.nil?
+                if subject_data.nil?
+                  puts "subject_data is nil"
+                  puts subject_embed["error"]
+                  puts subject_text.nil?
+                  sleep 10
+                end
+                subject_embedding.pack("F*") if !subject_embedding.nil?
             end
             vector_field :description_vector, 
               algorithm: "FLAT", 
@@ -49,6 +71,23 @@ module RedmineRediss
               distance_metric: "COSINE",
               initial_cap: 1024,
               block_size: 1024 do
+                puts "Getting description_embedding..."
+                description_text = "#{description}"            
+                description_embed = client.embeddings(
+                  parameters: {
+                    model: "text-embedding-ada-002",
+                    input: description_text
+                  }
+                )
+                description_data = description_embed.parsed_response["data"]
+                description_embedding = description_data[0]["embedding"] if !description_data.nil?
+                if description_data.nil?
+                  puts "description_data is nil"
+                  puts description_embed["error"]
+                  puts description_text.nil?
+                  sleep 10
+                end
+                description_embedding.pack("F*") if !description_embedding.nil?
             end
           end
           Issue.acts_as_searchable  :columns  =>  ["#{Issue.table_name}.subject", "#{Issue.table_name}.description"],

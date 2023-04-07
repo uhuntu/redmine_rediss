@@ -559,14 +559,51 @@ if Issue.search_index.nil?
   return
 end
 
+unless Issue.search_index.exist?
+  my_log "- Issue.search_index is not exist"
+end
+
 my_log "- Issue.search_index.name = #{Issue.search_index.name}"
-results = Issue.search_index.search("test").results.inspect
+# results = Issue.search_index.search("test").results.inspect
 # my_log "results = #{results}"
+
+issue_index = Issue.search_index
+issue_index.drop
+issue_index.create
 
 Issue.all.each do |issue|
   my_log "issue = #{issue}"
+  # issue_doc = issue.search_document
+  # my_log "issue_doc = #{issue_doc}"
+
+  find = RediSearch::Document.get(issue_index, issue.id)
+
+  puts "find = #{find}"
+  puts "id = #{issue.id}"
+
+  subject_text = issue[:subject]
+  description_text = issue[:description]
+
+  if description_text.nil? || description_text.empty?
+    if !find.nil?
+      issue.remove_from_index
+    end
+    next
+  end
+
+  if !find.nil?
+    next
+  end
+
   issue_doc = issue.search_document
-  my_log "issue_doc = #{issue_doc}"
+  issue_index.add issue_doc if !issue_doc.nil?
+
+  if issue_doc.nil?
+    puts "Skipping..."
+  else
+    puts "Inserted..."
+  end
+
   break
 end
 
