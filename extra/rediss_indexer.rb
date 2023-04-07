@@ -464,7 +464,7 @@ path_to_attachment = File.join(
   Redmine::Configuration['attachments_storage_path'] || 
   File.join(Rails.root, "files")
 )
-puts "path_to_attachment = #{path_to_attachment}"
+my_log "path_to_attachment = #{path_to_attachment}"
 
 # Indexing files
 if $onlyfiles
@@ -578,8 +578,8 @@ Issue.all.each do |issue|
 
   find = RediSearch::Document.get(issue_index, issue.id)
 
-  puts "find = #{find}"
-  puts "id = #{issue.id}"
+  my_log "find = #{find}"
+  my_log "id = #{issue.id}"
 
   subject_text = issue[:subject]
   description_text = issue[:description]
@@ -599,9 +599,9 @@ Issue.all.each do |issue|
   issue_index.add issue_doc if !issue_doc.nil?
 
   if issue_doc.nil?
-    puts "Skipping..."
+    my_log "Skipping..."
   else
-    puts "Inserted..."
+    my_log "Inserted..."
   end
 
   break

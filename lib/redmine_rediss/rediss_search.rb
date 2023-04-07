@@ -94,7 +94,7 @@ module RedmineRediss
       end
       client = OpenAI::Client.new
     
-      puts "Getting query_embedding..."
+      Rails.logger.info "Getting query_embedding..."
       query_embed = client.embeddings(
         parameters: {
           model: "text-embedding-ada-002",
@@ -106,9 +106,9 @@ module RedmineRediss
       query_embedding = query_data[0]["embedding"] if !query_data.nil?
   
       if query_data.nil?
-        puts "query_data is nil"
-        puts query_embed["error"]
-        puts query_string.nil?
+        Rails.logger.info "query_data is nil"
+        Rails.logger.info query_embed["error"]
+        Rails.logger.info query_string.nil?
         abort
       end
   
@@ -116,7 +116,7 @@ module RedmineRediss
       return nil if query_pack.nil?
   
       # Start an index session.
-      puts "Rediss Search"
+      Rails.logger.info "Rediss Search"
       issue_index = Issue.search_index
 
       if issue_index.nil?
@@ -138,7 +138,7 @@ module RedmineRediss
   
       # index_results = index_search.results
       # index_inspect = index_results.inspect
-      # puts index_results.pluck(:subject, :description)
+      # Rails.logger.info index_results.pluck(:subject, :description)
 
 #####################################################################
 
