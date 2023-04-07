@@ -136,6 +136,8 @@ module RedmineRediss
       index_search = index_search
         .params(:vector, query_pack) if !query_pack.nil?
   
+      # index_search = issue_index.search(query_string)
+
       # index_results = index_search.results
       # index_inspect = index_results.inspect
       # Rails.logger.info index_results.pluck(:subject, :description)
