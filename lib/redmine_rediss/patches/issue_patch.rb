@@ -45,7 +45,7 @@ module RedmineRediss
               distance_metric: "COSINE",
               initial_cap: 1024,
               block_size: 1024 do
-                Rails.logger.info "Getting subject_embedding..."
+                puts "Getting subject_embedding..."
                 subject_text = "#{subject}"
                 subject_embed = client.embeddings(
                   parameters: {
@@ -56,9 +56,9 @@ module RedmineRediss
                 subject_data = subject_embed.parsed_response["data"]
                 subject_embedding = subject_data[0]["embedding"] if !subject_data.nil?
                 if subject_data.nil?
-                  Rails.logger.info "subject_data is nil"
-                  Rails.logger.info subject_embed["error"]
-                  Rails.logger.info subject_text.nil?
+                  puts "subject_data is nil"
+                  puts subject_embed["error"]
+                  puts subject_text.nil?
                   sleep 10
                 end
                 subject_embedding.pack("F*") if !subject_embedding.nil?
@@ -71,7 +71,7 @@ module RedmineRediss
               distance_metric: "COSINE",
               initial_cap: 1024,
               block_size: 1024 do
-                Rails.logger.info "Getting description_embedding..."
+                puts "Getting description_embedding..."
                 description_text = "#{description}"            
                 description_embed = client.embeddings(
                   parameters: {
@@ -82,9 +82,9 @@ module RedmineRediss
                 description_data = description_embed.parsed_response["data"]
                 description_embedding = description_data[0]["embedding"] if !description_data.nil?
                 if description_data.nil?
-                  Rails.logger.info "description_data is nil"
-                  Rails.logger.info description_embed["error"]
-                  Rails.logger.info description_text.nil?
+                  puts "description_data is nil"
+                  puts description_embed["error"]
+                  puts description_text.nil?
                   sleep 10
                 end
                 description_embedding.pack("F*") if !description_embedding.nil?
