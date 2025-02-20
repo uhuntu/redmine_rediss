@@ -1,0 +1,6 @@
+[submodule "extra/ruby-openai"]
+	path = extra/ruby-openai
+	url = git@github.com:uhuntu/ruby-openai.git
+[submodule "extra/redi_search"]
+	path = extra/redi_search
+	url = git@github.com:uhuntu/redi_search.git
