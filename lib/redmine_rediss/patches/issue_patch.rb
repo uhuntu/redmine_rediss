@@ -23,22 +23,41 @@
 module RedmineRediss
   module Patches
     module IssuePatch
-    
+
       def self.included(base)
         base.class_eval do
           OpenAI.configure do |config|
-            config.access_token = ENV.fetch('OPENAI_ACCESS_TOKEN')
+            config.access_token = "ak-imShZOsYccvZWohKepvx5NogyN9RxteyXxgxeNixlqnH8vRX"
+            config.uri_base = "https://api.nextapi.fun/"
           end
           client = OpenAI::Client.new
-          
+
+          def embed(text, client)
+            embed = client.embeddings(
+              parameters: {
+                model: "text-embedding-ada-002",
+                input: text
+              }
+            )
+            data = embed.parsed_response["data"]
+            embedding = data[0]["embedding"] if !data.nil?
+            if data.nil?
+              puts "data is nil"
+              puts embed["error"]
+              puts text.nil?
+              sleep 10
+            end
+            embedding.pack("F*") if !embedding.nil?
+          end
+
           redi_search do
             text_field :subject, phonetic: "dm:en"
             text_field :description, phonetic: "dm:en"
             # text_field :combined do
             #   "#{subject} #{description}"
             # end
-            vector_field :subject_vector, 
-              algorithm: "FLAT", 
+            vector_field :subject_vector,
+              algorithm: "FLAT",
               count: 10,
               type: "FLOAT32",
               dim: 1536,
@@ -46,25 +65,10 @@ module RedmineRediss
               initial_cap: 1024,
               block_size: 1024 do
                 puts "Getting subject_embedding..."
-                subject_text = "#{subject}"
-                subject_embed = client.embeddings(
-                  parameters: {
-                    model: "text-embedding-ada-002",
-                    input: subject_text
-                  }
-                )
-                subject_data = subject_embed.parsed_response["data"]
-                subject_embedding = subject_data[0]["embedding"] if !subject_data.nil?
-                if subject_data.nil?
-                  puts "subject_data is nil"
-                  puts subject_embed["error"]
-                  puts subject_text.nil?
-                  sleep 10
-                end
-                subject_embedding.pack("F*") if !subject_embedding.nil?
+                embed("#{subject}", client)
             end
-            vector_field :description_vector, 
-              algorithm: "FLAT", 
+            vector_field :description_vector,
+              algorithm: "FLAT",
               count: 10,
               type: "FLOAT32",
               dim: 1536,
@@ -72,22 +76,7 @@ module RedmineRediss
               initial_cap: 1024,
               block_size: 1024 do
                 puts "Getting description_embedding..."
-                description_text = "#{description}"            
-                description_embed = client.embeddings(
-                  parameters: {
-                    model: "text-embedding-ada-002",
-                    input: description_text
-                  }
-                )
-                description_data = description_embed.parsed_response["data"]
-                description_embedding = description_data[0]["embedding"] if !description_data.nil?
-                if description_data.nil?
-                  puts "description_data is nil"
-                  puts description_embed["error"]
-                  puts description_text.nil?
-                  sleep 10
-                end
-                description_embedding.pack("F*") if !description_embedding.nil?
+                embed("#{description}", client)
             end
           end
           Issue.acts_as_searchable  :columns  =>  ["#{Issue.table_name}.subject", "#{Issue.table_name}.description"],
@@ -128,22 +117,22 @@ module RedmineRediss
 
         # self = Issue
         # tokens = ["test"]
-        # projects = 
-        
+        # projects =
+
         # options = {
-        #   :all_words=>true, 
-        #   :titles_only=>false, 
-        #   :attachments=>"0", 
-        #   :open_issues=>false, 
+        #   :all_words=>true,
+        #   :titles_only=>false,
+        #   :attachments=>"0",
+        #   :open_issues=>false,
         #   :params=>{
-        #     "utf8"=>"✓", 
-        #     "scope"=>"", 
-        #     "q"=>"test", 
-        #     "controller"=>"search", 
+        #     "utf8"=>"✓",
+        #     "scope"=>"",
+        #     "q"=>"test",
+        #     "controller"=>"search",
         #     "action"=>"index"
         #   }
         # }
-        
+
         # user = Redmine Admin
         # name = Issue
 
@@ -175,7 +164,7 @@ module RedmineRediss
           #   .joins("JOIN #{Project.table_name}  ON #{Issue.table_name}.project_id   = #{Project.table_name}.id")
           #   .where(sql, Project::STATUS_ACTIVE).scoping do
           #     where(tokens_condition(search_data)).scoping do
-          #       results = 
+          #       results =
           #         where(search_data.limit_options)
           #         .distinct
           #         .pluck(searchable_options[:date_column], :id)

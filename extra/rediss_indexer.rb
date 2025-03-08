@@ -35,7 +35,7 @@ $redmine_root = File.expand_path('../../../../', __FILE__)
 # Files location
 $files = 'files'
 
-# scriptindex binary path 
+# scriptindex binary path
 $scriptindex  = '/usr/bin/scriptindex'
 
 # omindex binary path
@@ -122,7 +122,7 @@ optparse = OptionParser.new do |opts|
   opts.banner = 'Usage: rediss_indexer.rb [OPTIONS...]'
   opts.separator('')
   opts.separator('Index redmine files and repositories')
-  opts.separator('')  
+  opts.separator('')
   opts.separator('')
   opts.separator('Options:')
   opts.on('-p', '--projects a,b,c', Array,
@@ -135,7 +135,7 @@ optparse = OptionParser.new do |opts|
   opts.on('-d', '--rediss',             'Only index Redmine rediss') { $onlyredis = 1 }
   opts.on('-e', '--environment ENV',
           'Rails ENVIRONMENT (development, testing or production), default production') { |e| $env = e}
-  opts.on('-t', '--temp-dir PATH',      'Temporary directory for indexing'){ |t| $tempdir = t }  
+  opts.on('-t', '--temp-dir PATH',      'Temporary directory for indexing'){ |t| $tempdir = t }
   opts.on('-x', '--resetlog',           'Reset index log'){  $resetlog = 1 }
   opts.on('-X', '--reset-database',     'Reset database'){  $resetdatabase = 1 }
   opts.on('-V', '--version',            'show version and exit') { puts VERSION; exit}
@@ -168,7 +168,7 @@ def indexing(databasepath, project, repository)
   my_log "Fetch changesets: #{project.name} - #{repo_name(repository)}"
   repository.fetch_changesets
   repository.reload.changesets.reload
-  latest_changeset = repository.changesets.first    
+  latest_changeset = repository.changesets.first
   revision = latest_changeset ? latest_changeset.revision : nil
   if revision
     my_log "Latest revision: #{project.name} - #{repo_name(repository)} - #{revision}"
@@ -202,7 +202,7 @@ def indexing(databasepath, project, repository)
 end
 
 def supported_mime_type(entry)
-  mtype = Redmine::MimeType.of(entry)    
+  mtype = Redmine::MimeType.of(entry)
   MIME_TYPES.include?(mtype) || Redmine::MimeType.is_type?('text', entry)
 end
 
@@ -289,8 +289,8 @@ def walkin(databasepath, indexconf, project, repository, identifier, changesets)
   changesets.each do |changeset|
     my_log "Changeset changes for #{changeset.id} #{changeset.filechanges.inspect}"
     next unless changeset.filechanges
-    changeset.filechanges.each do |change|        
-      actions[change.path] = (change.action == 'D') ? DELETE : ADD_OR_UPDATE        
+    changeset.filechanges.each do |change|
+      actions[change.path] = (change.action == 'D') ? DELETE : ADD_OR_UPDATE
     end
   end
   return unless actions
@@ -347,7 +347,7 @@ def convert_to_text(fpath, type)
   text = ""
   return text unless File.exist?(FORMAT_HANDLERS[type].split(' ').first)
   case type
-  when 'pdf'    
+  when 'pdf'
     text = `#{FORMAT_HANDLERS[type]} #{fpath} -`
   when /(xlsx|docx|odt|pptx)/i
     system "#{$unzip} -d #{$tempdir}/temp #{fpath} > /dev/null", out: '/dev/null'
@@ -360,7 +360,7 @@ def convert_to_text(fpath, type)
       fouts = ["#{$tempdir}/temp/content.xml"]
     when 'pptx'
       fouts = Dir["#{$tempdir}/temp/ppt/slides/*.xml"]
-    end                
+    end
     begin
       fouts.each do |fout|
         text += File.read(fout) + "\n"
@@ -394,29 +394,29 @@ def add_or_update_index(databasepath, indexconf, project, repository, identifier
   my_log('Mime type text') if  Redmine::MimeType.is_type?('text', path)
   my_log "Indexing: #{path}"
   begin
-    itext = Tempfile.new('filetoindex.tmp', $tempdir) 
+    itext = Tempfile.new('filetoindex.tmp', $tempdir)
     itext.write("url=#{uri.to_s}\n")
     if action != DELETE
       sdate = lastrev.time || Time.at(0).in_time_zone
       itext.write "date=#{sdate.to_s}\n"
       body = nil
       text.force_encoding 'UTF-8'
-      text.each_line do |line|        
-        if body.blank? 
+      text.each_line do |line|
+        if body.blank?
           itext.write "body=#{line}"
           body = 1
         else
           itext.write "=#{line}"
         end
-      end      
+      end
     else
       my_log "Path: #{path} should be deleted"
     end
-    itext.close    
+    itext.close
     my_log "TEXT #{itext.path} generated"
     my_log "Index command: #{$scriptindex} -s #{$user_stem_lang} #{databasepath} #{indexconf.path} #{itext.path}"
     system_or_raise "#{$scriptindex} -s english #{databasepath} #{indexconf.path} #{itext.path}"
-    itext.unlink    
+    itext.unlink
     my_log 'New doc added to rediss database'
   rescue => e
     my_log e.message, true
@@ -426,9 +426,9 @@ end
 def my_log(text, error = false)
   if error
     $stderr.puts text
-  elsif $verbose > 0    
+  elsif $verbose > 0
     $stdout.puts text
-  end  
+  end
 end
 
 def system_or_raise(command)
@@ -439,13 +439,13 @@ def system_or_raise(command)
   end
 end
 
-def find_project(prt)        
+def find_project(prt)
   project = Project.active.has_module(:repository).find_by(identifier: prt)
   if project
     my_log "Project found: #{project}"
   else
     my_log "Project #{prt} not found", true
-  end    
+  end
   @project = project
 end
 
@@ -461,7 +461,7 @@ end
 my_log "Redmine environment [RAILS_ENV=#{$env}] correctly loaded ..."
 
 path_to_attachment = File.join(
-  Redmine::Configuration['attachments_storage_path'] || 
+  Redmine::Configuration['attachments_storage_path'] ||
   File.join(Rails.root, "files")
 )
 my_log "path_to_attachment = #{path_to_attachment}"
@@ -489,7 +489,7 @@ if $onlyfiles
       rescue => e
         my_log e.message, true
         exit 1
-      end      
+      end
     end
     cmd = +"#{$omindex} -s #{lang} --db #{databasepath} #{filespath} --url / --depth-limit=0"
     cmd << ' -v' if $verbose > 0
@@ -517,7 +517,7 @@ if $onlyrepos
     rescue => e
       my_log e.message, true
       exit 1
-    end     
+    end
   end
   $projects = Project.active.has_module(:repository).pluck(:identifier) if $projects.blank?
   $projects.each do |identifier|
@@ -568,8 +568,8 @@ my_log "- Issue.search_index.name = #{Issue.search_index.name}"
 # my_log "results = #{results}"
 
 issue_index = Issue.search_index
-issue_index.drop
-issue_index.create
+# issue_index.drop
+# issue_index.create
 
 Issue.all.each do |issue|
   my_log "issue = #{issue}"
@@ -595,16 +595,21 @@ Issue.all.each do |issue|
     next
   end
 
-  issue_doc = issue.search_document
-  issue_index.add issue_doc if !issue_doc.nil?
+  begin
+    issue_doc = issue.search_document
+    issue_index.add issue_doc if !issue_doc.nil?
 
-  if issue_doc.nil?
-    my_log "Skipping..."
-  else
-    my_log "Inserted..."
+    if issue_doc.nil?
+      my_log "Skipping..."
+    else
+      my_log "Inserted..."
+    end
+  rescue => error
+    my_log error.message
+    next
   end
 
-  break
+  # break
 end
 
 # Indexing rediss

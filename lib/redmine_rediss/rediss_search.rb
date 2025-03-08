@@ -89,11 +89,11 @@ module RedmineRediss
 #####################################################################
 
       OpenAI.configure do |config|
-        config.access_token = ENV.fetch('OPENAI_ACCESS_TOKEN')
-        config.http_proxy = ENV.fetch('http_proxy')
+        config.access_token = "ak-imShZOsYccvZWohKepvx5NogyN9RxteyXxgxeNixlqnH8vRX"
+        config.uri_base = "https://api.nextapi.fun/"
       end
       client = OpenAI::Client.new
-    
+
       Rails.logger.info "Getting query_embedding..."
       query_embed = client.embeddings(
         parameters: {
@@ -101,20 +101,20 @@ module RedmineRediss
           input: query_string
         }
       )
-  
+
       query_data = query_embed.parsed_response["data"]
       query_embedding = query_data[0]["embedding"] if !query_data.nil?
-  
+
       if query_data.nil?
         Rails.logger.info "query_data is nil"
         Rails.logger.info query_embed["error"]
         Rails.logger.info query_string.nil?
         abort
       end
-  
+
       query_pack = query_embedding.pack("F*") if !query_embedding.nil?
       return nil if query_pack.nil?
-  
+
       # Start an index session.
       Rails.logger.info "Rediss Search"
       issue_index = Issue.search_index
@@ -125,17 +125,17 @@ module RedmineRediss
       end
 
       Rails.logger.info "issue_index: #{issue_index.name}"
-  
+
       index_search = issue_index
         .search("*=>[KNN 10 @subject_vector $vector AS vector_score]")
         .return(:subject, :description, :vector_score)
         .sort_by(:subject)
         .limit(10)
         .dialect(2)
-  
+
       index_search = index_search
         .params(:vector, query_pack) if !query_pack.nil?
-  
+
       # index_search = issue_index.search(query_string)
 
       # index_results = index_search.results
@@ -146,7 +146,7 @@ module RedmineRediss
 
       searchset = index_search
       Rails.logger.info "issue_results is: #{searchset.results.inspect}"
-      
+
       return nil if searchset.nil?
 
       # Display the results.
