@@ -89,8 +89,8 @@ module RedmineRediss
 #####################################################################
 
       OpenAI.configure do |config|
-        config.access_token = "ak-imShZOsYccvZWohKepvx5NogyN9RxteyXxgxeNixlqnH8vRX"
-        config.uri_base = "https://api.nextapi.fun/"
+        config.access_token = ENV.fetch('OPENAI_ACCESS_TOKEN')
+        config.http_proxy = ENV.fetch('http_proxy')
       end
       client = OpenAI::Client.new
 
@@ -127,9 +127,9 @@ module RedmineRediss
       Rails.logger.info "issue_index: #{issue_index.name}"
 
       index_search = issue_index
-        .search("*=>[KNN 10 @subject_vector $vector AS vector_score]")
-        .return(:subject, :description, :vector_score)
-        .sort_by(:subject)
+        .search("*=>[KNN 10 @combined_vector $vector AS vector_score]")
+        .return(:subject, :description, :combined, :vector_score)
+        .sort_by(:combined)
         .limit(10)
         .dialect(2)
 

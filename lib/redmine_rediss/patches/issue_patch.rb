@@ -27,8 +27,8 @@ module RedmineRediss
       def self.included(base)
         base.class_eval do
           OpenAI.configure do |config|
-            config.access_token = "ak-imShZOsYccvZWohKepvx5NogyN9RxteyXxgxeNixlqnH8vRX"
-            config.uri_base = "https://api.nextapi.fun/"
+            config.access_token = ENV.fetch('OPENAI_ACCESS_TOKEN')
+            config.http_proxy = ENV.fetch('http_proxy')
           end
           client = OpenAI::Client.new
 
@@ -53,9 +53,9 @@ module RedmineRediss
           redi_search do
             text_field :subject, phonetic: "dm:en"
             text_field :description, phonetic: "dm:en"
-            # text_field :combined do
-            #   "#{subject} #{description}"
-            # end
+            text_field :combined, phonetic: "dm:en" do
+              "#{subject} #{description}"
+            end
             vector_field :subject_vector,
               algorithm: "FLAT",
               count: 10,
@@ -64,7 +64,7 @@ module RedmineRediss
               distance_metric: "COSINE",
               initial_cap: 1024,
               block_size: 1024 do
-                puts "Getting subject_embedding..."
+                puts "#{id} Getting subject_embedding..."
                 embed("#{subject}", client)
             end
             vector_field :description_vector,
@@ -75,11 +75,22 @@ module RedmineRediss
               distance_metric: "COSINE",
               initial_cap: 1024,
               block_size: 1024 do
-                puts "Getting description_embedding..."
+                puts "#{id} Getting description_embedding..."
                 embed("#{description}", client)
             end
+            vector_field :combined_vector,
+              algorithm: "FLAT",
+              count: 10,
+              type: "FLOAT32",
+              dim: 1536,
+              distance_metric: "COSINE",
+              initial_cap: 1024,
+              block_size: 1024 do
+                puts "#{id} Getting combined_embedding..."
+                embed("#{subject} #{description}", client)
+            end
           end
-          Issue.acts_as_searchable  :columns  =>  ["#{Issue.table_name}.subject", "#{Issue.table_name}.description"],
+          Issue.acts_as_searchable  :columns  =>  ["#{Issue.table_name}.subject", "#{Issue.table_name}.description", "#{Issue.table_name}.combined"],
                                     :preload  =>  [:project, :status, :tracker],
                                     :scope    =>  lambda {|options| options[:open_issues] ? self.open : self.all}
         end
